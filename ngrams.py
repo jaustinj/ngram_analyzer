@@ -234,7 +234,7 @@ def save_file(filename):
     df.to_excel(writer, 'Word Count', encoding='UTF-8')
     writer.save()
 
-def nancounter(x):
+def pandaCounter(x):
     if type(x) is type([]):
         count = dict(Counter(x))
         return count
@@ -260,16 +260,20 @@ if __name__ == '__main__':
     sentance_cutoff = get_user_number('Please select title word limit (1-1000)?:  ', n=1000)
     stopwords = initialize_stopwords_list(user_stopwords = get_user_stopwords())
     df = pd.read_csv(get_filename(), skiprows=1)
+    
+    #define which columns to work on from export
+    columns_to_include = ['Category', 'Comments', 'Creator', 'Creator_Country', 'Duration (seconds)', 'ER30', 'ER7', 'Facebook_Comments', 'Facebook_Likes', 'Facebook_Shares', 'Facebook_Total_Engagements', 'Platform', 'Published_Date', 'Topics', 'Total_Engagements', 'V30', 'V7', 'Video_Title', 'Video_URL', 'Views', 'Likes']
+    columns_to_do_stats_on = ['Comments', 'Duration (seconds)' , 'ER30', 'ER7', 'Facebook_Comments', 'Facebook_Likes', 'Facebook_Shares', 'Facebook_Total_Engagements', 'Total_Engagements', 'V30', 'V7', 'Views', 'Likes']
+    #columns_to_do_stats_on = df.select_dtypes(include=['float64']).columns.tolist() #list of columns with 'float64' type
+    columns_to_summarize = ['Category', 'Creator', 'Creator_Country', 'Platform', 'Topics']
+
     print('\n(Part 1/6): Reading selected csv...')
 
 
     start_time = time.time()
     print('\n(Part 2/6): Converting to word-index table...')
-    columns_to_include = ['Category', 'Comments', 'Creator', 'Creator_Country', 'Duration (seconds)', 'ER30', 'ER7', 'Facebook_Comments', 'Facebook_Likes', 'Facebook_Shares', 'Facebook_Total_Engagements', 'Platform', 'Published_Date', 'Topics', 'Total_Engagements', 'V30', 'V7', 'Video_Title', 'Video_URL', 'Views', 'Likes']
     ngram_df = create_ngram_df(df, title_column = 'Video_Title', creator_column = 'Creator', n = ngram, stopwords = stopwords, sentance_cutoff = sentance_cutoff, columns_to_include=columns_to_include)
 
-    #columns_to_do_stats_on = df.select_dtypes(include=['float64']).columns.tolist() #list of columns with 'float64' type
-    columns_to_do_stats_on = ['Comments', 'Duration (seconds)' , 'ER30', 'ER7', 'Facebook_Comments', 'Facebook_Likes', 'Facebook_Shares', 'Facebook_Total_Engagements', 'Total_Engagements', 'V30', 'V7', 'Views', 'Likes']
 
     print('\n(Part 3/6): Computing metric means...')
     df = df_means(ngram_df, *columns_to_do_stats_on)
@@ -279,12 +283,10 @@ if __name__ == '__main__':
     #drop some less interesting data to make opening excel faster
     print('\n(Part 5/6): Doing some extra analysis...')
     df = df.drop(columns_to_do_stats_on, axis=1)
-    df = df[df['word_count'] > 1]
-    columns_to_summarize = ['Category', 'Creator', 'Creator_Country', 'Platform', 'Topics']
-    df = summarize_columns(df, columns_to_summarize)
-    print(df.head())
+    for column in columns_to_summarize:
+        df[column] = df[column].apply(pandaCounter)
     df = df.join(pd.DataFrame(df['Platform'].to_dict()).T)
-
+    df = df[df['word_count'] > 1]
 
     print('\n(Part 6/6): Saving file to Desktop...')
     save_file(outfile)

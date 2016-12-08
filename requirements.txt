@@ -1,0 +1,4 @@
+numpy==1.11.2
+pandas==0.19.1
+scipy==0.16.0
+xlsxwriter==0.9.3

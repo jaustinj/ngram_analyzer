@@ -295,8 +295,19 @@ if __name__ == '__main__':
     df = pd.read_csv(get_filename(), skiprows=1)
     
     #define which columns to work on from export
-    columns_to_include = ['Category', 'Comments', 'Creator', 'Creator_Country', 'Duration (seconds)', 'ER30', 'ER7', 'Facebook_Comments', 'Facebook_Likes', 'Facebook_Shares', 'Facebook_Total_Engagements', 'Platform', 'Published_Date', 'Topics', 'Total_Engagements', 'V30', 'V7', 'Video_Title', 'Video_URL', 'Views', 'Likes']
-    columns_to_do_stats_on = ['Comments', 'Duration (seconds)' , 'ER30', 'ER7', 'Facebook_Comments', 'Facebook_Likes', 'Facebook_Shares', 'Facebook_Total_Engagements', 'Total_Engagements', 'V30', 'V7', 'Views', 'Likes']
+    columns_to_include = ['Category', 'Comments', 'Creator', 
+                          'Creator_Country', 'Duration (seconds)', 
+                          'ER30', 'ER7', 'Facebook_Comments', 'Facebook_Likes', 
+                          'Facebook_Shares', 'Facebook_Total_Engagements', 'Platform', 
+                          'Published_Date', 'Topics', 'Total_Engagements', 
+                          'V30', 'V7', 'Video_Title', 'Video_URL', 
+                          'Views', 'Likes']
+
+    columns_to_do_stats_on = ['Comments', 'Duration (seconds)' , 'ER30', 
+                              'ER7', 'Facebook_Comments', 'Facebook_Likes', 
+                              'Facebook_Shares', 'Facebook_Total_Engagements', 'Total_Engagements', 
+                              'V30', 'V7', 'Views', 'Likes']
+                              
     #columns_to_do_stats_on = df.select_dtypes(include=['float64']).columns.tolist() #list of columns with 'float64' type
     columns_to_summarize = ['Category', 'Creator', 'Creator_Country', 'Platform', 'Topics']
 

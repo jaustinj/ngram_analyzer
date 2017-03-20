@@ -45,9 +45,7 @@ class Ngram(object):
 
     CORES = multiprocessing.cpu_count()
 
-    def __init__(self, df, set_ngram=2, title_cutoff=None, 
-                 add_stopwords={}, 
-                 filter_creator_names_out=True):
+    def __init__(self, df, set_ngram=2, title_cutoff=None, add_stopwords={}, filter_creator_names_out=True):
         self.df = df
         self.__ngram = set_ngram
         self.__title_cutoff = title_cutoff
@@ -129,8 +127,11 @@ class Ngram(object):
         df = self.df.copy()
         df.drop_duplicates([Ngram.TITLE_COLUMN])
         ngram_dict = ngram_dict()
+        total = len(df)
+        counter = 1
 
         for tup in df.itertuples():
+            self.printProgress(iteration=counter, total=total, barLength=50, prefix='Step 1/2: Finding Ngrams')
             row = tuple_to_named_series(tup)
             relevent_words_list = filter_title_words()
             ngram_list = get_ngrams(relevent_words_list, self.__ngram)
@@ -138,6 +139,7 @@ class Ngram(object):
                 for column in ngram_dict.keys():
                     if not pd.isnull(row[column]):
                         add_ngram_to_dict()
+            counter += 1
 
         ngram_df = pd.DataFrame(ngram_dict)
         ngram_df = sort_by_count(ngram_df)
@@ -146,12 +148,19 @@ class Ngram(object):
 
     def calc_and_summarize(self):
 
-        def df_averager(agg_func = sp.nanmean):
+        def df_averager(agg_func = sp.nanmean, message=''):
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=RuntimeWarning)
+                
+                total = len(Ngram.COLUMNS_TO_AVERAGE) 
+                iter_counter = 1
+
+
                 for column in Ngram.COLUMNS_TO_AVERAGE:
+                    self.printProgress(iteration=iter_counter, total=total, barLength=50, prefix=message)
                     column_name = 'mean_'+str(column)
                     df[column_name] = df[column].apply(lambda x: agg_func(x))
+                    iter_counter += 1
 
         def pandaCounter(x):
             if isinstance(x, list):
@@ -160,12 +169,12 @@ class Ngram(object):
                 return x
             
         df = self.raw_ngram.copy()
-        
+
         for column in Ngram.COLUMNS_TO_SUMMARIZE:
             df[column] = df[column].apply(pandaCounter)
 
-        df_averager(agg_func=sp.nanmean)
-        df_averager(agg_func=sp.nanmedian)
+        df_averager(agg_func=sp.nanmean, message='Step 2/3: Aggregating by Mean')
+        df_averager(agg_func=sp.nanmedian, message='Step 3/3: Aggregating by Median')
         df = df.drop(Ngram.COLUMNS_TO_AVERAGE, axis=1)
 
         df = df.join(pd.DataFrame(df[Ngram.PLATFORM_COLUMN].to_dict()).T)
@@ -173,29 +182,26 @@ class Ngram(object):
         return df
 
 
-
-
-
-def printProgress (iteration, total, prefix = '', suffix = '', 
-                   decimals = 1, barLength = 100):
-    """
-    Call in a loop to create terminal progress bar
-    @params:
-        iteration   - Required  : current iteration (Int)
-        total       - Required  : total iterations (Int)
-        prefix      - Optional  : prefix string (Str)
-        suffix      - Optional  : suffix string (Str)
-        decimals    - Optional  : positive number of decimals in percent complete (Int)
-        barLength   - Optional  : character length of bar (Int)
-    """
-    formatStr = "{0:." + str(decimals) + "f}"
-    percent = formatStr.format(100 * (iteration / float(total)))
-    filledLength = int(round(barLength * iteration / float(total)))
-    bar = '█' * filledLength + '-' * (barLength - filledLength)
-    sys.stdout.write('\r%s |%s| %s%s %s' % (prefix, bar, percent, '%', suffix)),
-    if iteration == total:
-        sys.stdout.write('\n')
-    sys.stdout.flush()
+    def printProgress (self, iteration, total, prefix = '', suffix = '', 
+                       decimals = 1, barLength = 100):
+        """
+        Call in a loop to create terminal progress bar
+        @params:
+            iteration   - Required  : current iteration (Int)
+            total       - Required  : total iterations (Int)
+            prefix      - Optional  : prefix string (Str)
+            suffix      - Optional  : suffix string (Str)
+            decimals    - Optional  : positive number of decimals in percent complete (Int)
+            barLength   - Optional  : character length of bar (Int)
+        """
+        formatStr = "{0:." + str(decimals) + "f}"
+        percent = formatStr.format(100 * (iteration / float(total)))
+        filledLength = int(round(barLength * iteration / float(total)))
+        bar = '█' * filledLength + '-' * (barLength - filledLength)
+        sys.stdout.write('\r%s |%s| %s%s %s' % (prefix, bar, percent, '%', suffix)),
+        if iteration == total:
+            sys.stdout.write('\n')
+        sys.stdout.flush()
 
 
 

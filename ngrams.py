@@ -318,6 +318,7 @@ if __name__ == '__main__':
     #drop some less interesting data to make opening excel faster
     print('\n(Part 5/6): Doing some extra analysis...')
     df = df.drop(columns_to_do_stats_on, axis=1)
+    df['Unique_Creator_Count'] = df['Creator'].apply(lambda x: len(x))
     for column in columns_to_summarize:
         df[column] = df[column].apply(pandaCounter)
     df = df.join(pd.DataFrame(df['Platform'].to_dict()).T)
